@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./src/ve_til_isy"
+    ]
+}

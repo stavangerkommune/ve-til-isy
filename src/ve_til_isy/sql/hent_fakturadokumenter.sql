@@ -1,0 +1,7 @@
+SELECT * 
+FROM [SK_FAKTURABEHANDLING].[dbo].[U_FAKTDOK] 
+WHERE u_id IN (
+    SELECT [U_ID]
+    FROM [SK_FAKTURABEHANDLING].[dbo].[U_FAKTREG]
+    WHERE [U_SELSKAP]={u_selskap} AND [U_FAKTLOP]='{faktlop}'
+)
