@@ -41,9 +41,7 @@ python -m src.ve_til_isy
 ```
 
 ## Docker
-Det enkleste er å starte hente docker-image fra Docker Hub, og bruke en env-fil.
-
-.env.dist er en grei mal på hva som trengs i env-filen.
+Docker image ligger på Docker Hub.
 
 ```console
 docker run --env-file env --name ve_til_isy sk29433/ve-til-isy
