@@ -32,7 +32,7 @@ def main():
     status("🏁 Starter behandling 🏁")
 
     # Hent innstillinger
-    with open(FILSTI + "\\" + "setup.toml", "r") as file:
+    with open(FILSTI + "/" + "setup.toml", "r") as file:
         innstillinger_toml = file.read()
     innstillinger = parse(innstillinger_toml)
 

@@ -9,7 +9,7 @@
 #   generate-hashes: false
 #   universal: false
 
--e file:.
+# -e file:.
 et-xmlfile==1.1.0
     # via openpyxl
 numpy==1.26.4
