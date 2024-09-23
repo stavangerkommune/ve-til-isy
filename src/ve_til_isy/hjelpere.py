@@ -2,6 +2,7 @@ import configparser
 import datetime
 import os
 from decimal import Decimal
+import requests
 
 import pandas as pd
 import pymssql
@@ -167,6 +168,7 @@ def aggreger_bilag(bilagslinjer):
                 "ansvar",
                 "prosjekt",
                 "dispnr",
+                "etr",
             ]
         )
         .agg({"netto": "sum", "mva": "sum", "brutto": "sum"})
@@ -203,3 +205,8 @@ def status(melding, nylinje=True):
             end="",
         )
     return
+
+
+def get_public_ip():
+    response = requests.get("https://api.ipify.org").text
+    return response

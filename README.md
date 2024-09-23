@@ -44,7 +44,7 @@ python -m src.ve_til_isy
 Docker image ligger på Docker Hub.
 
 ```console
-docker run --env-file env --name ve_til_isy sk29433/ve-til-isy
+docker run sk29433/ve-til-isy
 ```
 
 ## Innstillinger
