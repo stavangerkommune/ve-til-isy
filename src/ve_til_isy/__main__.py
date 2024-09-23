@@ -1,5 +1,7 @@
 import datetime
 import os
+import sys
+import csv
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -10,9 +12,12 @@ from .hjelpere import (
     aggreger_bilag,
     beregn_brutto,
     flytt_levinfo,
-    utlign_oreavrunding,
     status,
+    utlign_oreavrunding,
+    get_public_ip,
 )
+
+from .sftp import upload_sftp
 
 # Filsti til innstillingsfil, og hvor output skal lagres
 FILSTI = os.getenv("FILSTI")
@@ -23,6 +28,7 @@ FILSTI_SQL = os.path.dirname(__file__) + "/sql/"
 # Last .env-fil, hvis den finnes.
 load_dotenv()
 
+
 # Hvilket år er i år?
 i_aar = datetime.datetime.now().year
 aar_liste = [i_aar - 1, i_aar, i_aar + 1]
@@ -30,6 +36,7 @@ aar_liste = [i_aar - 1, i_aar, i_aar + 1]
 
 def main():
     status("🏁 Starter behandling 🏁")
+    status(f"ip-adresse: {get_public_ip()}")
 
     # Hent innstillinger
     with open(FILSTI + "/" + "setup.toml", "r") as file:
@@ -90,7 +97,12 @@ def main():
                         os.makedirs(FILSTI_CSV, exist_ok=True)
                         # Lagre filen.
                         filnavn = f"{FILSTI_CSV}Visma til ISY selskap {selskap["nr"]} {selskap["navn"]} {aar} j {siste_journal} til {selskap["journal_" + str(aar)]} {datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.csv"
-                        df.to_csv(filnavn, index=False, decimal=",")
+                        df.to_csv(
+                            filnavn,
+                            index=False,
+                            decimal=",",
+                            quoting=csv.QUOTE_NONNUMERIC,
+                        )
 
                 else:
                     print("Ingen nye bilag!")
@@ -264,6 +276,17 @@ def lagre_fakturadokumenter(u_selskap, aar, bilag_og_faktlop):
     return
 
 
+def get_contractid(row):
+    if row["dispnr"].startswith("ISY-PNS"):
+        return (
+            row["dispnr"].split("ISY-PNS")[-1]
+            + str("-")
+            + row["etr"].split("ISY-ETR")[-1]
+        )
+    else:
+        return ""
+
+
 def bearbeid_df(df):
     """
     Tar en dataframe og bearbeider denne til ISY sitt ønskede format.
@@ -283,7 +306,10 @@ def bearbeid_df(df):
     df["netto"] = pd.to_numeric(df["netto"])
     df["mva"] = pd.to_numeric(df["mva"])
     df["brutto"] = pd.to_numeric(df["brutto"])
-    df = df.drop(columns=["journalnr", "selskap", "aar"])
+    df["dispnr"] = df["dispnr"].astype(str)
+    df["etr"] = df["etr"].astype(str)
+    df["ContractID"] = df.apply(get_contractid, axis=1)
+
     df = df.rename(
         columns={
             "bilag": "VoucherID",
@@ -299,9 +325,15 @@ def bearbeid_df(df):
             "brutto": "BaseAmount",
             "ansvar": "Ansvar",
             "prosjekt": "Eiendel",
-            "dispnr": "ContractID",
+            "dispnr": "kb09",
+            "etr": "kb10",
         }
     )
+
+    # Fjern "None" i blanke celler.
+    df[["kb09", "kb10"]] = df[["kb09", "kb10"]].fillna("")
+
+    df = df.drop(columns=["journalnr", "selskap", "aar"])
 
     # Lag "tomme" kolonner:
     df["LineNo"] = pd.Series(dtype="int")
@@ -316,8 +348,8 @@ def bearbeid_df(df):
     df["Aktivitet"] = pd.Series(dtype="int")
     df["Byggtabell"] = pd.Series(dtype="int")
     df["ChangeID"] = pd.Series(dtype="int")
-    df["kb09"] = pd.Series(dtype="int")
-    df["kb10"] = pd.Series(dtype="int")
+    # df["kb09"] = pd.Series(dtype="int")
+    # df["kb10"] = pd.Series(dtype="int")
     df["Description"] = pd.Series(dtype="int")
 
     # Juster rekkefølge
@@ -357,6 +389,31 @@ def bearbeid_df(df):
 
     return df
 
+
+def sjekk_env():
+    liste_over_env = [
+        "VISMA_SERVER",
+        "VISMA_BRUKER",
+        "VISMA_PASSORD",
+        "VISMA_DB_PREFIX",
+        "FILSTI",
+        "FTP_SERVER",
+        "FTP_BRUKER",
+        "FTP_PASSORD",
+    ]
+
+    mangler = ""
+
+    for variabel in liste_over_env:
+        if not os.getenv(variabel):
+            mangler = mangler + " " + variabel
+
+    if mangler:
+        sys.exit(f"😬🫨🤯 Mangler følgende ENV-variabler:{mangler} . Please fix 🥳☀️😎")
+
+
+# Sjekk at vi har inne alle env-variablene som trengs
+sjekk_env()
 
 # Dersom .py-fila kjøres direkte, start main()
 if __name__ == "__main__":

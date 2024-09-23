@@ -12,6 +12,7 @@ WITH BilagInfo AS (
     kt.u_kb02 AS ansvar,
     kt.u_kb04 AS prosjekt,
     kt.u_kb09 AS dispnr,
+    kt.u_kb10 AS etr,
     lb.u_mvakode AS mvakode,
     lb.u_resknr AS resknr,
     lb.u_faktlop AS faktlop,
