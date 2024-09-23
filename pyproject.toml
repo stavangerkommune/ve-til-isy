@@ -23,6 +23,7 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
+universal = true
 dev-dependencies = []
 
 [tool.hatch.metadata]
