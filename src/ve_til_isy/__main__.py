@@ -348,8 +348,6 @@ def bearbeid_df(df):
     df["Aktivitet"] = pd.Series(dtype="int")
     df["Byggtabell"] = pd.Series(dtype="int")
     df["ChangeID"] = pd.Series(dtype="int")
-    # df["kb09"] = pd.Series(dtype="int")
-    # df["kb10"] = pd.Series(dtype="int")
     df["Description"] = pd.Series(dtype="int")
 
     # Juster rekkefølge
